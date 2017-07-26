@@ -45,10 +45,17 @@ struct Adjnode
 struct  Adjlist  * li; 
 
 
-/******************************************
+/******************************************************************************************************************
+*  Function    : main()
 *
-*  MAIN API 
-********************************************/ 
+*  Description : Takes  input a parmeters  as  command line  arguments , create thread for server as  well as client
+*
+*  Input       : Command  line  argument 
+*                        1. Port  Number 
+*                        2. Self Ip-Address
+*  Output      :   
+* 
+******************************************************************************************************************/ 
 
 
 int main(int argc, char const *argv[])
@@ -57,7 +64,7 @@ int main(int argc, char const *argv[])
 	char buf[20];
 	int cost ; 
 	int port  ;   
-	int port_server = atoi(argv[1]);
+	int port_server;
 	int new_socket,server_fd;
 
 	struct sockaddr_in ser_addr, cli_addr;
@@ -65,6 +72,21 @@ int main(int argc, char const *argv[])
 	struct  Adjnode  * node  = NULL; 
 	char  buf_peer[16];
 
+	FILE *fp = NULL ; /* File descriptor */
+        FILE *fp1 = NULL;
+        pthread_t chld_thr;
+        pthread_t chld1_thr;
+        char  filename[]= "adjacency.txt";   /* Intial Configuration file */
+
+	if (argc  != 2 )
+	{
+		printf("Please  provide  valid  inputs \n");
+                exit(1);
+	}
+
+	port_server = atoi(argv[1]);
+
+/* Creation  of  self  node  . This will be at the  root  of  the adjacency  link  list*/
 
 	node  =(struct Adjnode *) malloc(sizeof(struct Adjnode)+1);
 
@@ -72,10 +94,7 @@ int main(int argc, char const *argv[])
 	{
 		printf ("Memory  Allocation  Failure \n");
 	}
-
-
-
-
+	
 	strcpy(node->addr, argv[2]);
 	node->cost =  0;
 	node->next = NULL;
@@ -89,18 +108,13 @@ int main(int argc, char const *argv[])
 
 	list->node = node;
 	strcpy(list->addr ,node->addr);
+	
 	list->next = NULL;
 	list->prev = NULL;
 
-	rn  = node ;
 	li  = list ;
 
 	strcpy(buf_peer,argv[2]);
-	FILE *fp = NULL ; /* File descriptor */
-	FILE *fp1 = NULL;
-	pthread_t chld_thr;
-	pthread_t chld1_thr;
-	char  filename[]= "adjacency.txt";   /* Intial Configuration file */
 
 	fp = fopen(filename,"r");
 	fp1 = fopen(filename, "r");
@@ -194,7 +208,7 @@ void *server_chld(void *arg)
 			perror("accept");
 		}
 
-		read(new_socket, data, 1024);
+		recv(new_socket, data, 1024);
 
 		while (sscanf(data, "%s %s %d", frombuf, tobuf, &cost) == 3)
 		{
@@ -270,7 +284,7 @@ void *client_chld(void *arg)
 
 
 
-	write(sock,buffer,1024);
+	send(sock,buffer,1024);
 
 
 	close(sock);
